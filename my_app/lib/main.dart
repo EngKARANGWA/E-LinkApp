@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
-import 'screens/buyer_registration.dart';
-import 'screens/seller_registration.dart';
+import 'Signup_page/buyer_signup.dart';
+import 'Signup_page/seller_signup.dart';
+import 'Signup_page/Buyer_login.dart';
+import 'Signup_page/Seller_login.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.deepPurple,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
       home: const AuthScreen(),
     );
   }
@@ -27,82 +27,50 @@ class _MyAppState extends State<MyApp> {
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
 
-  void _showUserTypeModal(BuildContext context) {
+  void _showUserTypeModal(BuildContext context, {bool isLogin = false}) {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
       builder: (BuildContext context) {
         return Container(
           padding: const EdgeInsets.all(20),
-          height: 250,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                "Continue as:",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              Text(
+                isLogin ? "Login as:" : "Continue as:",
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 30,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const BuyerRegistrationScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Buyer",
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
+                  _buildUserTypeButton(
+                    context,
+                    "Buyer",
+                    Colors.deepPurple,
+                    isLogin ? const BuyerLoginScreen() : const BuyerRegistrationScreen(),
                   ),
-                  OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 30,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      side: const BorderSide(color: Colors.deepPurple),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => const SellerRegistrationScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Seller",
-                      style: TextStyle(fontSize: 18, color: Colors.deepPurple),
-                    ),
+                  _buildUserTypeButton(
+                    context,
+                    "Seller",
+                    Colors.deepPurple,
+                    isLogin ? const SellerLoginScreen() : const SellerSignupPage(),
+                    isOutlined: true,
                   ),
                 ],
               ),
+              const SizedBox(height: 20),
             ],
           ),
         );
@@ -110,16 +78,72 @@ class AuthScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildUserTypeButton(
+    BuildContext context,
+    String text,
+    Color color,
+    Widget destination, {
+    bool isOutlined = false,
+  }) {
+    return isOutlined
+        ? OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              side: BorderSide(color: color),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => destination),
+              );
+            },
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 18, color: color),
+            ),
+          )
+        : ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: color,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => destination),
+              );
+            },
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 18, color: Colors.white),
+            ),
+          );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 600;
+    final isLandscape = screenSize.width > screenSize.height;
+    final isTablet = screenSize.width >= 600 && screenSize.width < 1200;
+    final isDesktop = screenSize.width >= 1200;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('E-Link', style: TextStyle(color: Colors.white70)),
+        title: const Text('E-Link', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      extendBodyBehindAppBar: true,
       body: Stack(
         children: [
           Container(
@@ -130,91 +154,155 @@ class AuthScreen extends StatelessWidget {
               ),
             ),
           ),
-          // ignore: deprecated_member_use
           Container(color: Colors.black.withOpacity(0.4)),
           Center(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                // ignore: deprecated_member_use
-                color: Colors.white.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(16),
-                // ignore: deprecated_member_use
-                border: Border.all(color: Colors.white.withOpacity(0.3)),
-              ),
-              width: MediaQuery.of(context).size.width * 0.85,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    "Welcome to E-Link!!",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 40,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onPressed: () => _showUserTypeModal(context),
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 38,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      side: const BorderSide(color: Colors.white70),
-                    ),
-                    onPressed: () => _showUserTypeModal(context),
-                    child: const Text(
-                      "Sign Up",
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextButton(
-                    onPressed: () => _showUserTypeModal(context),
-                    child: const Text(
-                      "Forgot Password?",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12.0),
-                    child: Text(
-                      "This mobile app connects buyers and sellers based on distance.",
+            child: SingleChildScrollView(
+              child: Container(
+                padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
+                margin: EdgeInsets.all(isSmallScreen ? 16 : 24),
+                constraints: BoxConstraints(
+                  maxWidth: isDesktop ? 600 : (isTablet ? 500 : double.infinity),
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "Welcome to E-Link!!",
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 15, color: Colors.white70),
+                      style: TextStyle(
+                        fontSize: isDesktop ? 32 : (isTablet ? 28 : 24),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                ],
+                    SizedBox(height: isLandscape ? 16 : (isSmallScreen ? 20 : 30)),
+                    if (isLandscape)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: _buildAuthButton(
+                              context,
+                              "Login",
+                              onPressed: () => _showUserTypeModal(context, isLogin: true),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildAuthButton(
+                              context,
+                              "Sign Up",
+                              isOutlined: true,
+                              onPressed: () => _showUserTypeModal(context),
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Column(
+                        children: [
+                          _buildAuthButton(
+                            context,
+                            "Login",
+                            onPressed: () => _showUserTypeModal(context, isLogin: true),
+                          ),
+                          SizedBox(height: isSmallScreen ? 10 : 15),
+                          _buildAuthButton(
+                            context,
+                            "Sign Up",
+                            isOutlined: true,
+                            onPressed: () => _showUserTypeModal(context),
+                          ),
+                        ],
+                      ),
+                    SizedBox(height: isLandscape ? 16 : (isSmallScreen ? 10 : 15)),
+                    TextButton(
+                      onPressed: () {
+                        // TODO: Implement forgot password functionality
+                      },
+                      child: const Text(
+                        "Forgot Password?",
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ),
+                    SizedBox(height: isLandscape ? 16 : (isSmallScreen ? 15 : 20)),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 12.0 : 16.0),
+                      child: Text(
+                        "This mobile app connects buyers and sellers based on distance.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: isDesktop ? 18 : (isTablet ? 16 : 15),
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: isSmallScreen ? 10 : 15),
+                  ],
+                ),
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildAuthButton(
+    BuildContext context,
+    String text, {
+    bool isOutlined = false,
+    required VoidCallback onPressed,
+  }) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 600;
+    final isLandscape = screenSize.width > screenSize.height;
+
+    return isOutlined
+        ? OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                vertical: isLandscape ? 12 : (isSmallScreen ? 12 : 14),
+                horizontal: isLandscape ? 16 : (isSmallScreen ? 38 : 40),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              side: const BorderSide(color: Colors.white70),
+            ),
+            onPressed: onPressed,
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: isLandscape ? 16 : (isSmallScreen ? 18 : 20),
+                color: Colors.white,
+              ),
+            ),
+          )
+        : ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              padding: EdgeInsets.symmetric(
+                vertical: isLandscape ? 12 : (isSmallScreen ? 12 : 14),
+                horizontal: isLandscape ? 16 : (isSmallScreen ? 40 : 42),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: onPressed,
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: isLandscape ? 16 : (isSmallScreen ? 18 : 20),
+                color: Colors.white,
+              ),
+            ),
+          );
   }
 }
