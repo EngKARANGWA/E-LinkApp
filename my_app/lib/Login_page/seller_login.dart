@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'seller_signup.dart';
+import '../Signup_page/Seller_signup.dart';
+import '../main.dart';
+import '../Dashboard/seller_dashboard.dart';
 
 class SellerLoginScreen extends StatefulWidget {
   const SellerLoginScreen({super.key});
 
   @override
-  State<SellerLoginScreen> createState() => _SellerLoginScreenState();
+  State<SellerLoginScreen> createState() => SellerLoginScreenState();
 }
 
-class _SellerLoginScreenState extends State<SellerLoginScreen> {
+class SellerLoginScreenState extends State<SellerLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -22,9 +24,33 @@ class _SellerLoginScreenState extends State<SellerLoginScreen> {
   }
 
   void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      // Handle login logic here
-      print('Seller Login Form Submitted');
+    try {
+      debugPrint('Form validation started');
+      if (_formKey.currentState!.validate()) {
+        debugPrint('Form validated successfully');
+        if (_emailController.text == 'seller@gmail.com' && 
+            _passwordController.text == 'seller123') {
+          debugPrint('Credentials matched, attempting navigation');
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SellerDashboard()),
+          ).then((_) => debugPrint('Navigation completed'));
+          debugPrint('Seller Login Form Submitted');
+        } else {
+          debugPrint('Invalid credentials');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid email or password'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error during navigation: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
 
@@ -42,6 +68,15 @@ class _SellerLoginScreenState extends State<SellerLoginScreen> {
       appBar: AppBar(
         title: const Text('Seller Login'),
         backgroundColor: Colors.deepPurple,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(
+              context,
+              MaterialPageRoute(builder: (context) => const AuthScreen()),
+            );
+          },
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -63,7 +98,9 @@ class _SellerLoginScreenState extends State<SellerLoginScreen> {
                       color: Colors.deepPurple,
                     ),
                   ),
-                  SizedBox(height: isLandscape ? 12 : (isSmallScreen ? 16 : 24)),
+                  SizedBox(
+                    height: isLandscape ? 12 : (isSmallScreen ? 16 : 24),
+                  ),
                   Text(
                     "Sign in to your business account",
                     textAlign: TextAlign.center,
@@ -72,7 +109,9 @@ class _SellerLoginScreenState extends State<SellerLoginScreen> {
                       color: Colors.grey[600],
                     ),
                   ),
-                  SizedBox(height: isLandscape ? 16 : (isSmallScreen ? 20 : 30)),
+                  SizedBox(
+                    height: isLandscape ? 16 : (isSmallScreen ? 20 : 30),
+                  ),
                   TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
@@ -104,7 +143,9 @@ class _SellerLoginScreenState extends State<SellerLoginScreen> {
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          _isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                         ),
                         onPressed: () {
                           setState(() {
@@ -138,7 +179,9 @@ class _SellerLoginScreenState extends State<SellerLoginScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: isLandscape ? 16 : (isSmallScreen ? 20 : 30)),
+                  SizedBox(
+                    height: isLandscape ? 16 : (isSmallScreen ? 20 : 30),
+                  ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
@@ -193,4 +236,4 @@ class _SellerLoginScreenState extends State<SellerLoginScreen> {
       ),
     );
   }
-} 
+}

@@ -1,14 +1,18 @@
+// ignore_for_file: file_names
+
 import 'package:flutter/material.dart';
 import '../Signup_page/buyer_signup.dart';
+import '../main.dart';
+import '../Dashboard/buyer_dashboard.dart';
 
 class BuyerLoginScreen extends StatefulWidget {
   const BuyerLoginScreen({super.key});
 
   @override
-  State<BuyerLoginScreen> createState() => _BuyerLoginScreenState();
+  State<BuyerLoginScreen> createState() => BuyerLoginScreenState();
 }
 
-class _BuyerLoginScreenState extends State<BuyerLoginScreen> {
+class BuyerLoginScreenState extends State<BuyerLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -22,9 +26,33 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen> {
   }
 
   void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      // Handle login logic here
-      print('Buyer Login Form Submitted');
+    try {
+      debugPrint('Form validation started');
+      if (_formKey.currentState!.validate()) {
+        debugPrint('Form validated successfully');
+        if (_emailController.text == 'buyer@gmail.com' &&
+            _passwordController.text == 'buyer123') {
+          debugPrint('Credentials matched, attempting navigation');
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const BuyerDashboard()),
+          ).then((_) => debugPrint('Navigation completed'));
+          debugPrint('Buyer Login Form Submitted');
+        } else {
+          debugPrint('Invalid credentials');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid email or password'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error during navigation: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -42,6 +70,15 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen> {
       appBar: AppBar(
         title: const Text('Buyer Login'),
         backgroundColor: Colors.deepPurple,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(
+              context,
+              MaterialPageRoute(builder: (context) => const AuthScreen()),
+            );
+          },
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -63,7 +100,9 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen> {
                       color: Colors.deepPurple,
                     ),
                   ),
-                  SizedBox(height: isLandscape ? 12 : (isSmallScreen ? 16 : 24)),
+                  SizedBox(
+                    height: isLandscape ? 12 : (isSmallScreen ? 16 : 24),
+                  ),
                   Text(
                     "Sign in to continue",
                     textAlign: TextAlign.center,
@@ -72,7 +111,9 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen> {
                       color: Colors.grey[600],
                     ),
                   ),
-                  SizedBox(height: isLandscape ? 16 : (isSmallScreen ? 20 : 30)),
+                  SizedBox(
+                    height: isLandscape ? 16 : (isSmallScreen ? 20 : 30),
+                  ),
                   TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
@@ -104,7 +145,9 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen> {
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          _isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                         ),
                         onPressed: () {
                           setState(() {
@@ -138,7 +181,9 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: isLandscape ? 16 : (isSmallScreen ? 20 : 30)),
+                  SizedBox(
+                    height: isLandscape ? 16 : (isSmallScreen ? 20 : 30),
+                  ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
@@ -171,14 +216,22 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen> {
                       ),
                       TextButton(
                         onPressed: () {
+                          try {
+                            debugPrint('Navigating to BuyerRegistrationScreen');
                             Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const BuyerSignupScreen(),
-                                    print("Navigating to buyer signup page"),
-                                )
-                            )
-                          // TODO: Navigate to buyer registration
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        const BuyerRegistrationScreen(),
+                              ),
+                            ).then((_) => debugPrint('Navigation completed'));
+                          } catch (e) {
+                            debugPrint('Error during navigation: $e');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
                         },
                         child: const Text(
                           "Sign Up",

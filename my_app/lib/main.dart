@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'Signup_page/buyer_signup.dart';
 import 'Signup_page/seller_signup.dart';
-import 'Signup_page/Buyer_login.dart';
-import 'Signup_page/Seller_login.dart';
+import 'Login_page/buyer_login.dart';
+import 'Login_page/seller_login.dart';
 
 void main() {
   runApp(const MyApp());
