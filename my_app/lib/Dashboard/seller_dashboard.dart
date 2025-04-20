@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../Product/product_post_modal.dart';
 
 class SellerDashboard extends StatefulWidget {
   const SellerDashboard({super.key});
@@ -173,13 +174,12 @@ class _SellerDashboardState extends State<SellerDashboard> {
               labelText: 'Category',
               border: OutlineInputBorder(),
             ),
-            items:
-                _categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
+            items: _categories.map((String category) {
+              return DropdownMenuItem<String>(
+                value: category,
+                child: Text(category),
+              );
+            }).toList(),
             onChanged: (String? newValue) {
               setState(() {
                 _categoryController.text = newValue ?? '';
@@ -316,21 +316,20 @@ class _SellerDashboardState extends State<SellerDashboard> {
                         onSelected: (value) {
                           // TODO: Implement product actions
                         },
-                        itemBuilder:
-                            (BuildContext context) => [
-                              const PopupMenuItem(
-                                value: 'edit',
-                                child: Text('Edit Product'),
-                              ),
-                              const PopupMenuItem(
-                                value: 'delete',
-                                child: Text('Delete Product'),
-                              ),
-                              const PopupMenuItem(
-                                value: 'deactivate',
-                                child: Text('Deactivate'),
-                              ),
-                            ],
+                        itemBuilder: (BuildContext context) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Text('Edit Product'),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Text('Delete Product'),
+                          ),
+                          const PopupMenuItem(
+                            value: 'deactivate',
+                            child: Text('Deactivate'),
+                          ),
+                        ],
                       ),
                   ],
                 ),
@@ -504,6 +503,16 @@ class _SellerDashboardState extends State<SellerDashboard> {
             _currentIndex = index;
           });
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => const ProductPostModal(),
+          );
+        },
+        backgroundColor: Colors.deepPurple,
+        child: const Icon(Icons.add),
       ),
     );
   }
