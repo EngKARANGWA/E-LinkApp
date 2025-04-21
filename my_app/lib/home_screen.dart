@@ -144,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Navigate to Seller Signup Page
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SellerSignupPage()),
+                  MaterialPageRoute(builder: (context) =>const SellerSignupPage()),
                 );
               },
               child: const Text(
@@ -196,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Handle seller login
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SellerSignupPage()),
+                  MaterialPageRoute(builder: (context) =>const SellerSignupPage()),
                 );
               },
               child: const Text(
@@ -217,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Navigate to Seller Signup Page
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SellerSignupPage()),
+                  MaterialPageRoute(builder: (context) =>const SellerSignupPage()),
                 );
               },
               child: const Text(

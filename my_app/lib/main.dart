@@ -59,13 +59,17 @@ class AuthScreen extends StatelessWidget {
                     context,
                     "Buyer",
                     Colors.deepPurple,
-                    isLogin ? const BuyerLoginScreen() : const BuyerRegistrationScreen(),
+                    isLogin
+                        ? const BuyerLoginScreen()
+                        : const BuyerRegistrationScreen(),
                   ),
                   _buildUserTypeButton(
                     context,
                     "Seller",
                     Colors.deepPurple,
-                    isLogin ? const SellerLoginScreen() : const SellerSignupPage(),
+                    isLogin
+                        ? const SellerLoginScreen()
+                        : const SellerSignupPage(),
                     isOutlined: true,
                   ),
                 ],
@@ -154,19 +158,20 @@ class AuthScreen extends StatelessWidget {
               ),
             ),
           ),
-          Container(color: Colors.black.withOpacity(0.4)),
+          Container(color: Colors.black.withAlpha(102)),
           Center(
             child: SingleChildScrollView(
               child: Container(
                 padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
                 margin: EdgeInsets.all(isSmallScreen ? 16 : 24),
                 constraints: BoxConstraints(
-                  maxWidth: isDesktop ? 600 : (isTablet ? 500 : double.infinity),
+                  maxWidth:
+                      isDesktop ? 600 : (isTablet ? 500 : double.infinity),
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withAlpha(38),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  border: Border.all(color: Colors.white.withAlpha(77)),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -180,7 +185,8 @@ class AuthScreen extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: isLandscape ? 16 : (isSmallScreen ? 20 : 30)),
+                    SizedBox(
+                        height: isLandscape ? 16 : (isSmallScreen ? 20 : 30)),
                     if (isLandscape)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -189,7 +195,8 @@ class AuthScreen extends StatelessWidget {
                             child: _buildAuthButton(
                               context,
                               "Login",
-                              onPressed: () => _showUserTypeModal(context, isLogin: true),
+                              onPressed: () =>
+                                  _showUserTypeModal(context, isLogin: true),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -209,7 +216,8 @@ class AuthScreen extends StatelessWidget {
                           _buildAuthButton(
                             context,
                             "Login",
-                            onPressed: () => _showUserTypeModal(context, isLogin: true),
+                            onPressed: () =>
+                                _showUserTypeModal(context, isLogin: true),
                           ),
                           SizedBox(height: isSmallScreen ? 10 : 15),
                           _buildAuthButton(
@@ -220,19 +228,81 @@ class AuthScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                    SizedBox(height: isLandscape ? 16 : (isSmallScreen ? 10 : 15)),
+                    SizedBox(
+                        height: isLandscape ? 16 : (isSmallScreen ? 10 : 15)),
                     TextButton(
                       onPressed: () {
-                        // TODO: Implement forgot password functionality
+                        final emailController = TextEditingController();
+                        showDialog(
+                          context: context,
+                          builder: (context) => Dialog(
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'Reset Password',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: emailController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Email',
+                                      border: OutlineInputBorder(),
+                                      prefixIcon: Icon(Icons.email),
+                                    ),
+                                    keyboardType: TextInputType.emailAddress,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      if (emailController.text.isEmpty) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Please enter your email')),
+                                        );
+                                        return;
+                                      }
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                              'Password reset link sent to your email'),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.deepPurple,
+                                      minimumSize:
+                                          const Size(double.infinity, 48),
+                                    ),
+                                    child: const Text('Send Reset Link'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
                       },
                       child: const Text(
                         "Forgot Password?",
                         style: TextStyle(color: Colors.white70),
                       ),
                     ),
-                    SizedBox(height: isLandscape ? 16 : (isSmallScreen ? 15 : 20)),
+                    SizedBox(
+                        height: isLandscape ? 16 : (isSmallScreen ? 15 : 20)),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 12.0 : 16.0),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: isSmallScreen ? 12.0 : 16.0),
                       child: Text(
                         "This mobile app connects buyers and sellers based on distance.",
                         textAlign: TextAlign.center,

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 class BuyerRegistrationScreen extends StatefulWidget {
   const BuyerRegistrationScreen({super.key});
 
   @override
-  State<BuyerRegistrationScreen> createState() => _BuyerRegistrationScreenState();
+  State<BuyerRegistrationScreen> createState() =>
+      _BuyerRegistrationScreenState();
 }
 
 class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
@@ -57,7 +59,8 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                       color: Colors.deepPurple,
                     ),
                   ),
-                  SizedBox(height: isLandscape ? 16 : (isSmallScreen ? 20 : 30)),
+                  SizedBox(
+                      height: isLandscape ? 16 : (isSmallScreen ? 20 : 30)),
                   if (isLandscape)
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,7 +91,8 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                                   if (value == null || value.isEmpty) {
                                     return 'Please enter your email';
                                   }
-                                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                      .hasMatch(value)) {
                                     return 'Please enter a valid email address';
                                   }
                                   return null;
@@ -170,7 +174,8 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your email';
                             }
-                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                .hasMatch(value)) {
                               return 'Please enter a valid email address';
                             }
                             return null;
@@ -217,7 +222,8 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                         ),
                       ],
                     ),
-                  SizedBox(height: isLandscape ? 16 : (isSmallScreen ? 24 : 32)),
+                  SizedBox(
+                      height: isLandscape ? 16 : (isSmallScreen ? 24 : 32)),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
@@ -231,7 +237,9 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         // Handle registration logic here
-                        print('Buyer Registration Form Submitted');
+                        if (kDebugMode) {
+                          print('Buyer Registration Form Submitted');
+                        }
                       }
                     },
                     child: Text(
@@ -279,4 +287,4 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
       validator: validator,
     );
   }
-} 
+}

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../services/product_service.dart';
+import 'dart:convert';
 
 class ProductPostModal extends StatefulWidget {
   const ProductPostModal({super.key});
@@ -17,6 +19,7 @@ class _ProductPostModalState extends State<ProductPostModal> {
   final _categoryController = TextEditingController();
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -37,13 +40,55 @@ class _ProductPostModalState extends State<ProductPostModal> {
     }
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // TODO: Implement product submission logic
-      Navigator.pop(context); // Close the modal
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product posted successfully!')),
-      );
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        // Convert image to base64
+        String? imageBase64;
+        if (_imageFile != null) {
+          final bytes = await _imageFile!.readAsBytes();
+          imageBase64 = base64Encode(bytes);
+        }
+
+        // Create product data
+        final product = {
+          'name': _productNameController.text,
+          'description': _descriptionController.text,
+          'price': double.parse(_priceController.text),
+          'category': _categoryController.text,
+          'image': imageBase64,
+          'status': 'Active',
+          'views': 0,
+          'inCart': 0,
+          'createdAt': DateTime.now().toIso8601String(),
+        };
+
+        // Save product
+        await ProductService.saveProduct(product);
+
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Product posted successfully!')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 
@@ -198,14 +243,16 @@ class _ProductPostModalState extends State<ProductPostModal> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                onPressed: _submitForm,
-                child: const Text(
-                  "Post Product",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
+                onPressed: _isLoading ? null : _submitForm,
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        "Post Product",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ],
           ),

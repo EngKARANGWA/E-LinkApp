@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../../services/product_service.dart';
 
 class ProductPostForm extends StatefulWidget {
   const ProductPostForm({super.key});
@@ -38,12 +39,26 @@ class _ProductPostFormState extends State<ProductPostForm> {
     }
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // TODO: Implement product submission logic
+      final product = {
+        'name': _productNameController.text,
+        'description': _descriptionController.text,
+        'price': double.parse(_priceController.text),
+        'category': _categoryController.text,
+        'image': _imageFile?.path ?? 'https://via.placeholder.com/150',
+        'status': 'Active',
+        'views': 0,
+        'inCart': 0,
+      };
+
+      await ProductService.saveProduct(product);
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Product posted successfully!')),
       );
+      Navigator.pop(context);
     }
   }
 
@@ -94,18 +109,18 @@ class _ProductPostFormState extends State<ProductPostForm> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: _imageFile == null
-                          ? Column(
+                          ? const Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
                                   Icons.add_photo_alternate,
                                   size: 50,
-                                  color: Colors.grey[400],
+                                  color: Colors.grey,
                                 ),
                                 SizedBox(height: 8),
                                 Text(
                                   'Tap to add product image',
-                                  style: TextStyle(color: Colors.grey[600]),
+                                  style: TextStyle(color: Colors.grey),
                                 ),
                               ],
                             )
@@ -123,10 +138,10 @@ class _ProductPostFormState extends State<ProductPostForm> {
                   // Product Name
                   TextFormField(
                     controller: _productNameController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: "Product Name",
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.shopping_bag),
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.shopping_bag),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -140,10 +155,10 @@ class _ProductPostFormState extends State<ProductPostForm> {
                   // Product Description
                   TextFormField(
                     controller: _descriptionController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: "Description",
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.description),
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.description),
                     ),
                     maxLines: 3,
                     validator: (value) {
@@ -158,10 +173,10 @@ class _ProductPostFormState extends State<ProductPostForm> {
                   // Price
                   TextFormField(
                     controller: _priceController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: "Price",
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.attach_money),
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.attach_money),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
@@ -179,10 +194,10 @@ class _ProductPostFormState extends State<ProductPostForm> {
                   // Category
                   TextFormField(
                     controller: _categoryController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: "Category",
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.category),
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.category),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {

@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import '../Product/product_post_modal.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import '../services/product_service.dart';
+import '../services/notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SellerDashboard extends StatefulWidget {
   const SellerDashboard({super.key});
@@ -15,6 +20,8 @@ class _SellerDashboardState extends State<SellerDashboard> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
 
   // Sample data - replace with actual data from your backend
   final List<Map<String, dynamic>> _myProducts = [
@@ -75,6 +82,168 @@ class _SellerDashboardState extends State<SellerDashboard> {
     'totalInCart': 8,
     'rating': 4.7,
   };
+
+  bool _notificationsEnabled = true;
+  bool _isDarkMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationPreferences();
+    _loadThemePreferences();
+  }
+
+  Future<void> _loadNotificationPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+    });
+  }
+
+  Future<void> _toggleNotifications(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notifications_enabled', value);
+    setState(() {
+      _notificationsEnabled = value;
+    });
+  }
+
+  Future<void> _loadThemePreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkMode = prefs.getBool('dark_mode') ?? false;
+    });
+  }
+
+  Future<void> _toggleTheme(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('dark_mode', value);
+    setState(() {
+      _isDarkMode = value;
+    });
+  }
+
+  Future<void> _getImage() async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> _showNotifications() async {
+    final notifications = await NotificationService.getNotifications();
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Notifications',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (notifications.isEmpty)
+                const Text('No notifications')
+              else
+                Expanded(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      final notification = notifications[index];
+                      return ListTile(
+                        title: Text(notification['message']),
+                        subtitle: Text(DateTime.parse(notification['timestamp'])
+                            .toString()),
+                        trailing: notification['read']
+                            ? null
+                            : IconButton(
+                                icon: const Icon(Icons.check),
+                                onPressed: () async {
+                                  await NotificationService.markAsRead(
+                                      notification['id']);
+                                  setState(() {});
+                                },
+                              ),
+                      );
+                    },
+                  ),
+                ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showSettings() async {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Settings',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.notifications),
+                title: const Text('Notifications'),
+                trailing: Switch(
+                  value: _notificationsEnabled,
+                  onChanged: _toggleNotifications,
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.dark_mode),
+                title: const Text('Dark Mode'),
+                trailing: Switch(
+                  value: _isDarkMode,
+                  onChanged: _toggleTheme,
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('Logout'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -206,9 +375,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: () {
-              // TODO: Implement image picker
-            },
+            onPressed: _getImage,
             icon: const Icon(Icons.add_photo_alternate),
             label: const Text('Add Product Image'),
             style: ElevatedButton.styleFrom(
@@ -216,10 +383,51 @@ class _SellerDashboardState extends State<SellerDashboard> {
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
           ),
+          if (_imageFile != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Image.file(
+                _imageFile!,
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+            ),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: () {
-              // TODO: Implement product submission
+            onPressed: () async {
+              if (_productNameController.text.isEmpty ||
+                  _priceController.text.isEmpty ||
+                  _categoryController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Please fill all required fields')),
+                );
+                return;
+              }
+
+              final product = {
+                'name': _productNameController.text,
+                'price': double.parse(_priceController.text),
+                'category': _categoryController.text,
+                'description': _descriptionController.text,
+                'address': _addressController.text,
+                'image': _imageFile?.path ?? 'https://via.placeholder.com/150',
+                'status': 'Active',
+                'views': 0,
+                'inCart': 0,
+              };
+
+              await ProductService.saveProduct(product);
+              setState(() {
+                _productNameController.clear();
+                _priceController.clear();
+                _categoryController.clear();
+                _descriptionController.clear();
+                _addressController.clear();
+                _imageFile = null;
+              });
+
+              if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Product added successfully')),
               );
@@ -313,8 +521,28 @@ class _SellerDashboardState extends State<SellerDashboard> {
                     ),
                     if (!isPurchased)
                       PopupMenuButton<String>(
-                        onSelected: (value) {
-                          // TODO: Implement product actions
+                        onSelected: (value) async {
+                          switch (value) {
+                            case 'edit':
+                              _productNameController.text = product['name'];
+                              _priceController.text =
+                                  product['price'].toString();
+                              _categoryController.text = product['category'];
+                              _descriptionController.text =
+                                  product['description'];
+                              _addressController.text = product['address'];
+                              setState(() => _currentIndex = 2);
+                              break;
+                            case 'delete':
+                              await ProductService.deleteProduct(product['id']);
+                              setState(() => _myProducts.remove(product));
+                              break;
+                            case 'deactivate':
+                              product['status'] = 'Inactive';
+                              await ProductService.updateProduct(product);
+                              setState(() {});
+                              break;
+                          }
                         },
                         itemBuilder: (BuildContext context) => [
                           const PopupMenuItem(
@@ -438,15 +666,11 @@ class _SellerDashboardState extends State<SellerDashboard> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
-            onPressed: () {
-              // TODO: Implement notifications
-            },
+            onPressed: _showNotifications,
           ),
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () {
-              // TODO: Implement settings
-            },
+            onPressed: _showSettings,
           ),
         ],
       ),

@@ -28,7 +28,7 @@ class SellerLoginScreenState extends State<SellerLoginScreen> {
       debugPrint('Form validation started');
       if (_formKey.currentState!.validate()) {
         debugPrint('Form validated successfully');
-        if (_emailController.text == 'seller@gmail.com' && 
+        if (_emailController.text == 'seller@gmail.com' &&
             _passwordController.text == 'seller123') {
           debugPrint('Credentials matched, attempting navigation');
           Navigator.push(
@@ -52,6 +52,64 @@ class SellerLoginScreenState extends State<SellerLoginScreen> {
         SnackBar(content: Text('Error: $e')),
       );
     }
+  }
+
+  Future<void> _showForgotPasswordDialog() async {
+    final emailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Reset Password',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Business Email',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.business),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  if (emailController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter your email')),
+                    );
+                    return;
+                  }
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Password reset link sent to your email'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+                child: const Text('Send Reset Link'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -170,9 +228,7 @@ class SellerLoginScreenState extends State<SellerLoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {
-                        // TODO: Implement forgot password functionality
-                      },
+                      onPressed: _showForgotPasswordDialog,
                       child: const Text(
                         "Forgot Password?",
                         style: TextStyle(color: Colors.deepPurple),
