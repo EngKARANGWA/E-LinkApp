@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'notification_service.dart';
 
 class CartService {
   static const String _cartKey = 'cart';
@@ -23,6 +24,14 @@ class CartService {
           (cart[existingIndex]['quantity'] ?? 1) + 1;
     } else {
       cart.add({...product, 'quantity': 1});
+
+      // Send notification to seller
+      if (product['sellerId'] != null) {
+        await NotificationService.addNotification(
+          'Your product "${product['name']}" was added to a cart',
+          sellerId: product['sellerId'],
+        );
+      }
     }
 
     await prefs.setString(_cartKey, json.encode(cart));

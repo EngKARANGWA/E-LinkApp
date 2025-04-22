@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class NotificationService {
   static const String _notificationsKey = 'notifications';
 
-  static Future<void> addNotification(String message) async {
+  static Future<void> addNotification(String message,
+      {String? sellerId}) async {
     final prefs = await SharedPreferences.getInstance();
     final notificationsJson = prefs.getString(_notificationsKey);
     List<Map<String, dynamic>> notifications = [];
@@ -20,20 +21,29 @@ class NotificationService {
       'message': message,
       'timestamp': DateTime.now().toIso8601String(),
       'read': false,
+      'sellerId': sellerId,
     });
 
     await prefs.setString(_notificationsKey, json.encode(notifications));
   }
 
-  static Future<List<Map<String, dynamic>>> getNotifications() async {
+  static Future<List<Map<String, dynamic>>> getNotifications(
+      {String? sellerId}) async {
     final prefs = await SharedPreferences.getInstance();
     final notificationsJson = prefs.getString(_notificationsKey);
 
     if (notificationsJson == null) return [];
 
-    return (json.decode(notificationsJson) as List)
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList();
+    List<Map<String, dynamic>> notifications =
+        (json.decode(notificationsJson) as List)
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+
+    if (sellerId != null) {
+      return notifications.where((n) => n['sellerId'] == sellerId).toList();
+    }
+
+    return notifications;
   }
 
   static Future<void> markAsRead(String notificationId) async {

@@ -59,17 +59,13 @@ class AuthScreen extends StatelessWidget {
                     context,
                     "Buyer",
                     Colors.deepPurple,
-                    isLogin
-                        ? const BuyerLoginScreen()
-                        : const BuyerRegistrationScreen(),
+                    isLogin ? const BuyerLoginScreen() : const BuyerSignup(),
                   ),
                   _buildUserTypeButton(
                     context,
                     "Seller",
                     Colors.deepPurple,
-                    isLogin
-                        ? const SellerLoginScreen()
-                        : const SellerSignupPage(),
+                    isLogin ? const SellerLoginScreen() : const SellerSignup(),
                     isOutlined: true,
                   ),
                 ],

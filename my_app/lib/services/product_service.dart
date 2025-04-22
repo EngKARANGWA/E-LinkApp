@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
 class ProductService {
   static const String _productsKey = 'products';
@@ -22,6 +23,20 @@ class ProductService {
     // Get next ID
     int nextId = prefs.getInt(_nextIdKey) ?? 1;
     product['id'] = nextId.toString();
+
+    // Add seller information
+    product['sellerId'] =
+        prefs.getString('current_user_id') ?? 'default_seller';
+
+    // Handle image
+    if (product['image'] is File) {
+      // Convert File to base64
+      final bytes = await (product['image'] as File).readAsBytes();
+      product['image'] = base64Encode(bytes);
+      product['isLocalImage'] = true;
+    } else if (product['image'].toString().startsWith('http')) {
+      product['isLocalImage'] = false;
+    }
 
     // Add new product
     products.add(product);

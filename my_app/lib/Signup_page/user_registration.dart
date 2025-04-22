@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
 import '../services/user_service.dart';
 import '../Dashboard/buyer_dashboard.dart';
+import '../Dashboard/seller_dashboard.dart';
 
-class BuyerSignup extends StatefulWidget {
-  const BuyerSignup({super.key});
+class UserRegistration extends StatefulWidget {
+  final String userType; // 'buyer' or 'seller'
+
+  const UserRegistration({super.key, required this.userType});
 
   @override
-  State<BuyerSignup> createState() => _BuyerSignupState();
+  State<UserRegistration> createState() => _UserRegistrationState();
 }
 
-class _BuyerSignupState extends State<BuyerSignup> {
+class _UserRegistrationState extends State<UserRegistration> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _phoneController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -25,8 +26,6 @@ class _BuyerSignupState extends State<BuyerSignup> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _addressController.dispose();
-    _phoneController.dispose();
     super.dispose();
   }
 
@@ -41,11 +40,7 @@ class _BuyerSignupState extends State<BuyerSignup> {
           email: _emailController.text,
           password: _passwordController.text,
           name: _nameController.text,
-          userType: 'buyer',
-          additionalInfo: {
-            'address': _addressController.text,
-            'phone': _phoneController.text,
-          },
+          userType: widget.userType,
         );
 
         // Login the user after successful registration
@@ -55,9 +50,14 @@ class _BuyerSignupState extends State<BuyerSignup> {
         );
 
         if (user != null && mounted) {
+          // Navigate to appropriate dashboard
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const BuyerDashboard()),
+            MaterialPageRoute(
+              builder: (context) => widget.userType == 'buyer'
+                  ? const BuyerDashboard()
+                  : const SellerDashboard(),
+            ),
           );
         }
       } catch (e) {
@@ -80,7 +80,7 @@ class _BuyerSignupState extends State<BuyerSignup> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Buyer Registration'),
+        title: Text('${widget.userType.capitalize()} Registration'),
         backgroundColor: Colors.deepPurple,
       ),
       body: SingleChildScrollView(
@@ -119,38 +119,6 @@ class _BuyerSignupState extends State<BuyerSignup> {
                   }
                   if (!value.contains('@')) {
                     return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.phone),
-                ),
-                keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your phone number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _addressController,
-                decoration: const InputDecoration(
-                  labelText: 'Address',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-                maxLines: 2,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your address';
                   }
                   return null;
                 },
@@ -202,12 +170,18 @@ class _BuyerSignupState extends State<BuyerSignup> {
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Register as Buyer'),
+                    : Text('Register as ${widget.userType.capitalize()}'),
               ),
             ],
           ),
         ),
       ),
     );
+  }
+}
+
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

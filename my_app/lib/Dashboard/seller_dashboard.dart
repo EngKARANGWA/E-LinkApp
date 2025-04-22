@@ -5,6 +5,7 @@ import 'dart:io';
 import '../services/product_service.dart';
 import '../services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class SellerDashboard extends StatefulWidget {
   const SellerDashboard({super.key});
@@ -22,46 +23,8 @@ class _SellerDashboardState extends State<SellerDashboard> {
   final TextEditingController _categoryController = TextEditingController();
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
-
-  // Sample data - replace with actual data from your backend
-  final List<Map<String, dynamic>> _myProducts = [
-    {
-      'id': '1',
-      'name': 'Smartphone',
-      'price': 499.99,
-      'image': 'https://via.placeholder.com/150',
-      'address': '123 Market St, New York',
-      'inCart': 5,
-      'views': 120,
-      'category': 'Electronics',
-      'status': 'Active',
-    },
-    {
-      'id': '2',
-      'name': 'Wooden Chair',
-      'price': 89.99,
-      'image': 'https://via.placeholder.com/150',
-      'address': '456 Furniture Ave, Chicago',
-      'inCart': 3,
-      'views': 85,
-      'category': 'Furniture',
-      'status': 'Active',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _purchasedProducts = [
-    {
-      'id': '3',
-      'name': 'Laptop',
-      'price': 999.99,
-      'image': 'https://via.placeholder.com/150',
-      'address': '789 Tech Blvd, San Francisco',
-      'buyer': 'John Doe',
-      'purchaseDate': '2024-03-15',
-      'rating': 4.5,
-      'review': 'Great product, fast delivery!',
-    },
-  ];
+  List<Map<String, dynamic>> _myProducts = [];
+  List<Map<String, dynamic>> _purchasedProducts = [];
 
   final List<String> _categories = [
     'Electronics',
@@ -91,6 +54,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
     super.initState();
     _loadNotificationPreferences();
     _loadThemePreferences();
+    _loadProducts();
   }
 
   Future<void> _loadNotificationPreferences() async {
@@ -134,7 +98,10 @@ class _SellerDashboardState extends State<SellerDashboard> {
   }
 
   Future<void> _showNotifications() async {
-    final notifications = await NotificationService.getNotifications();
+    final prefs = await SharedPreferences.getInstance();
+    final sellerId = prefs.getString('current_user_id') ?? 'default_seller';
+    final notifications =
+        await NotificationService.getNotifications(sellerId: sellerId);
     if (!mounted) return;
 
     showDialog(
@@ -211,7 +178,9 @@ class _SellerDashboardState extends State<SellerDashboard> {
               const SizedBox(height: 16),
               ListTile(
                 leading: const Icon(Icons.notifications),
-                title: const Text('Notifications'),
+                title: const Text(
+                  'Notifications',
+                ),
                 trailing: Switch(
                   value: _notificationsEnabled,
                   onChanged: _toggleNotifications,
@@ -253,6 +222,16 @@ class _SellerDashboardState extends State<SellerDashboard> {
     _addressController.dispose();
     _categoryController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadProducts() async {
+    final products = await ProductService.getProducts();
+    setState(() {
+      _myProducts =
+          products.where((product) => product['status'] == 'Active').toList();
+      _purchasedProducts =
+          products.where((product) => product['status'] == 'Sold').toList();
+    });
   }
 
   Widget _buildStatsCard() {
@@ -411,13 +390,15 @@ class _SellerDashboardState extends State<SellerDashboard> {
                 'category': _categoryController.text,
                 'description': _descriptionController.text,
                 'address': _addressController.text,
-                'image': _imageFile?.path ?? 'https://via.placeholder.com/150',
+                'image': _imageFile ?? 'https://via.placeholder.com/150',
                 'status': 'Active',
                 'views': 0,
                 'inCart': 0,
               };
 
               await ProductService.saveProduct(product);
+              await _loadProducts(); // Reload products after saving
+
               setState(() {
                 _productNameController.clear();
                 _priceController.clear();
@@ -454,12 +435,32 @@ class _SellerDashboardState extends State<SellerDashboard> {
         children: [
           Stack(
             children: [
-              Image.network(
-                product['image'],
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+              product['isLocalImage'] == true
+                  ? Image.memory(
+                      base64Decode(product['image'] ?? ''),
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    )
+                  : Image.network(
+                      product['image']?.toString() ??
+                          'https://via.placeholder.com/150',
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 200,
+                          width: double.infinity,
+                          color: Colors.grey[300],
+                          child: const Icon(
+                            Icons.image_not_supported,
+                            size: 50,
+                            color: Colors.grey,
+                          ),
+                        );
+                      },
+                    ),
               Positioned(
                 top: 8,
                 right: 8,
@@ -470,7 +471,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '\$${product['price'].toStringAsFixed(2)}',
+                    '\$${(product['price'] ?? 0.0).toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -495,7 +496,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
                       children: [
                         const Icon(Icons.visibility, size: 16),
                         const SizedBox(width: 4),
-                        Text('${product['views']}'),
+                        Text('${product['views'] ?? 0}'),
                       ],
                     ),
                   ),
@@ -512,7 +513,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
                   children: [
                     Expanded(
                       child: Text(
-                        product['name'],
+                        product['name']?.toString() ?? 'Unnamed Product',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -524,23 +525,27 @@ class _SellerDashboardState extends State<SellerDashboard> {
                         onSelected: (value) async {
                           switch (value) {
                             case 'edit':
-                              _productNameController.text = product['name'];
+                              _productNameController.text =
+                                  product['name']?.toString() ?? '';
                               _priceController.text =
-                                  product['price'].toString();
-                              _categoryController.text = product['category'];
+                                  (product['price'] ?? 0.0).toString();
+                              _categoryController.text =
+                                  product['category']?.toString() ?? '';
                               _descriptionController.text =
-                                  product['description'];
-                              _addressController.text = product['address'];
+                                  product['description']?.toString() ?? '';
+                              _addressController.text =
+                                  product['address']?.toString() ?? '';
                               setState(() => _currentIndex = 2);
                               break;
                             case 'delete':
-                              await ProductService.deleteProduct(product['id']);
-                              setState(() => _myProducts.remove(product));
+                              await ProductService.deleteProduct(
+                                  product['id']?.toString() ?? '');
+                              await _loadProducts();
                               break;
                             case 'deactivate':
                               product['status'] = 'Inactive';
                               await ProductService.updateProduct(product);
-                              setState(() {});
+                              await _loadProducts();
                               break;
                           }
                         },
@@ -567,7 +572,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
                     const Icon(Icons.location_on, size: 16),
                     const SizedBox(width: 4),
                     Text(
-                      product['address'],
+                      product['address']?.toString() ?? 'No address',
                       style: const TextStyle(color: Colors.grey),
                     ),
                   ],
@@ -579,7 +584,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
                       const Icon(Icons.shopping_cart, size: 16),
                       const SizedBox(width: 4),
                       Text(
-                        '${product['inCart']} in cart',
+                        '${product['inCart'] ?? 0} in cart',
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -590,7 +595,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
                       const Icon(Icons.category, size: 16),
                       const SizedBox(width: 4),
                       Text(
-                        product['category'],
+                        product['category']?.toString() ?? 'Uncategorized',
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -601,7 +606,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
                       const Icon(Icons.circle, size: 16, color: Colors.green),
                       const SizedBox(width: 4),
                       Text(
-                        product['status'],
+                        product['status']?.toString() ?? 'Unknown',
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -614,7 +619,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
                       const Icon(Icons.person, size: 16),
                       const SizedBox(width: 4),
                       Text(
-                        'Sold to: ${product['buyer']}',
+                        'Sold to: ${product['buyer']?.toString() ?? 'Unknown'}',
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -625,7 +630,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
                       const Icon(Icons.calendar_today, size: 16),
                       const SizedBox(width: 4),
                       Text(
-                        'Purchased: ${product['purchaseDate']}',
+                        'Purchased: ${product['purchaseDate']?.toString() ?? 'Unknown'}',
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -637,14 +642,14 @@ class _SellerDashboardState extends State<SellerDashboard> {
                         const Icon(Icons.star, size: 16, color: Colors.amber),
                         const SizedBox(width: 4),
                         Text(
-                          '${product['rating']}',
+                          '${product['rating'] ?? 0}',
                           style: const TextStyle(color: Colors.grey),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      product['review'],
+                      product['review']?.toString() ?? '',
                       style: const TextStyle(color: Colors.grey),
                     ),
                   ],

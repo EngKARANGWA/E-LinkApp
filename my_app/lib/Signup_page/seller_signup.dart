@@ -1,331 +1,232 @@
 // ignore: file_names
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
+import '../services/user_service.dart';
+import '../Dashboard/seller_dashboard.dart';
 
-class SellerSignupPage extends StatefulWidget {
-  const SellerSignupPage({super.key});
+class SellerSignup extends StatefulWidget {
+  const SellerSignup({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _SellerSignupPageState createState() => _SellerSignupPageState();
+  State<SellerSignup> createState() => _SellerSignupState();
 }
 
-class _SellerSignupPageState extends State<SellerSignupPage> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
-  final TextEditingController _businessNameController = TextEditingController();
-  final TextEditingController _phoneNumberController = TextEditingController();
+class _SellerSignupState extends State<SellerSignup> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _businessNameController = TextEditingController();
+  final _businessAddressController = TextEditingController();
+  final _phoneController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _businessNameController.dispose();
-    _phoneNumberController.dispose();
+    _businessAddressController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
-  void _submitForm() {
+  Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
-      // Handle form submission
-      if (kDebugMode) {
-        print("signup successful");
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        await UserService.registerUser(
+          email: _emailController.text,
+          password: _passwordController.text,
+          name: _nameController.text,
+          userType: 'seller',
+          additionalInfo: {
+            'businessName': _businessNameController.text,
+            'businessAddress': _businessAddressController.text,
+            'phone': _phoneController.text,
+          },
+        );
+
+        // Login the user after successful registration
+        final user = await UserService.loginUser(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+
+        if (user != null && mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const SellerDashboard()),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString())),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width < 600;
-    final isLandscape = screenSize.width > screenSize.height;
-    final isTablet = screenSize.width >= 600 && screenSize.width < 1200;
-    final isDesktop = screenSize.width >= 1200;
-    final padding = isSmallScreen ? 16.0 : 24.0;
-    final maxWidth = isDesktop ? 800.0 : (isTablet ? 600.0 : double.infinity);
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Seller Signup'),
+        title: const Text('Seller Registration'),
         backgroundColor: Colors.deepPurple,
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            constraints: BoxConstraints(maxWidth: maxWidth),
-            padding: EdgeInsets.all(padding),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    "Create Seller Account",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: isDesktop ? 32 : (isTablet ? 28 : 24),
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-                  SizedBox(height: isLandscape ? 12 : (isSmallScreen ? 16 : 24)),
-                  if (isLandscape)
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            children: [
-                              _buildTextField(
-                                controller: _businessNameController,
-                                label: "Business Name",
-                                icon: Icons.business,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return "Please enter your business name";
-                                  }
-                                  return null;
-                                },
-                                isLandscape: isLandscape,
-                                isSmallScreen: isSmallScreen,
-                              ),
-                              SizedBox(height: isSmallScreen ? 12 : 16),
-                              _buildTextField(
-                                controller: _emailController,
-                                label: "Email",
-                                icon: Icons.email,
-                                keyboardType: TextInputType.emailAddress,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return "Please enter your email";
-                                  }
-                                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                                    return "Please enter a valid email address";
-                                  }
-                                  return null;
-                                },
-                                isLandscape: isLandscape,
-                                isSmallScreen: isSmallScreen,
-                              ),
-                              SizedBox(height: isSmallScreen ? 12 : 16),
-                              _buildTextField(
-                                controller: _phoneNumberController,
-                                label: "Phone Number",
-                                icon: Icons.phone,
-                                keyboardType: TextInputType.phone,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return "Please enter your phone number";
-                                  }
-                                  if (!RegExp(r'^\d{10}$').hasMatch(value)) {
-                                    return "Please enter a valid phone number";
-                                  }
-                                  return null;
-                                },
-                                isLandscape: isLandscape,
-                                isSmallScreen: isSmallScreen,
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: isSmallScreen ? 12 : 16),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              _buildTextField(
-                                controller: _passwordController,
-                                label: "Password",
-                                icon: Icons.lock,
-                                suffixIcon: Icons.visibility_off,
-                                obscureText: true,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return "Please enter your password";
-                                  }
-                                  if (value.length < 6) {
-                                    return "Password must be at least 6 characters long";
-                                  }
-                                  return null;
-                                },
-                                isLandscape: isLandscape,
-                                isSmallScreen: isSmallScreen,
-                              ),
-                              SizedBox(height: isSmallScreen ? 12 : 16),
-                              _buildTextField(
-                                controller: _confirmPasswordController,
-                                label: "Confirm Password",
-                                icon: Icons.lock,
-                                suffixIcon: Icons.visibility_off,
-                                obscureText: true,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return "Please confirm your password";
-                                  }
-                                  if (value != _passwordController.text) {
-                                    return "Passwords do not match";
-                                  }
-                                  return null;
-                                },
-                                isLandscape: isLandscape,
-                                isSmallScreen: isSmallScreen,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    )
-                  else
-                    Column(
-                      children: [
-                        _buildTextField(
-                          controller: _businessNameController,
-                          label: "Business Name",
-                          icon: Icons.business,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "Please enter your business name";
-                            }
-                            return null;
-                          },
-                          isLandscape: isLandscape,
-                          isSmallScreen: isSmallScreen,
-                        ),
-                        SizedBox(height: isSmallScreen ? 12 : 16),
-                        _buildTextField(
-                          controller: _emailController,
-                          label: "Email",
-                          icon: Icons.email,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "Please enter your email";
-                            }
-                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                              return "Please enter a valid email address";
-                            }
-                            return null;
-                          },
-                          isLandscape: isLandscape,
-                          isSmallScreen: isSmallScreen,
-                        ),
-                        SizedBox(height: isSmallScreen ? 12 : 16),
-                        _buildTextField(
-                          controller: _phoneNumberController,
-                          label: "Phone Number",
-                          icon: Icons.phone,
-                          keyboardType: TextInputType.phone,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "Please enter your phone number";
-                            }
-                            if (!RegExp(r'^\d{10}$').hasMatch(value)) {
-                              return "Please enter a valid phone number";
-                            }
-                            return null;
-                          },
-                          isLandscape: isLandscape,
-                          isSmallScreen: isSmallScreen,
-                        ),
-                        SizedBox(height: isSmallScreen ? 12 : 16),
-                        _buildTextField(
-                          controller: _passwordController,
-                          label: "Password",
-                          icon: Icons.lock,
-                          suffixIcon: Icons.visibility_off,
-                          obscureText: true,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "Please enter your password";
-                            }
-                            if (value.length < 6) {
-                              return "Password must be at least 6 characters long";
-                            }
-                            return null;
-                          },
-                          isLandscape: isLandscape,
-                          isSmallScreen: isSmallScreen,
-                        ),
-                        SizedBox(height: isSmallScreen ? 12 : 16),
-                        _buildTextField(
-                          controller: _confirmPasswordController,
-                          label: "Confirm Password",
-                          icon: Icons.lock,
-                          suffixIcon: Icons.visibility_off,
-                          obscureText: true,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "Please confirm your password";
-                            }
-                            if (value != _passwordController.text) {
-                              return "Passwords do not match";
-                            }
-                            return null;
-                          },
-                          isLandscape: isLandscape,
-                          isSmallScreen: isSmallScreen,
-                        ),
-                      ],
-                    ),
-                  SizedBox(height: isLandscape ? 12 : (isSmallScreen ? 16 : 24)),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      padding: EdgeInsets.symmetric(
-                        vertical: isLandscape ? 12 : (isSmallScreen ? 14 : 16),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onPressed: _submitForm,
-                    child: Text(
-                      "Sign Up",
-                      style: TextStyle(
-                        fontSize: isLandscape ? 16 : (isSmallScreen ? 16 : 18),
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Full Name',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your name';
+                  }
+                  return null;
+                },
               ),
-            ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _businessNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Business Name',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.business),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your business name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Business Email',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  if (!value.contains('@')) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _phoneController,
+                decoration: const InputDecoration(
+                  labelText: 'Business Phone',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone),
+                ),
+                keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your phone number';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _businessAddressController,
+                decoration: const InputDecoration(
+                  labelText: 'Business Address',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on),
+                ),
+                maxLines: 2,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your business address';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a password';
+                  }
+                  if (value.length < 6) {
+                    return 'Password must be at least 6 characters';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _confirmPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'Confirm Password',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please confirm your password';
+                  }
+                  if (value != _passwordController.text) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _register,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Register as Seller'),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    IconData? suffixIcon,
-    bool obscureText = false,
-    TextInputType? keyboardType,
-    required String? Function(String?)? validator,
-    required bool isLandscape,
-    required bool isSmallScreen,
-  }) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        prefixIcon: Icon(icon),
-        suffixIcon: suffixIcon != null ? Icon(suffixIcon) : null,
-        contentPadding: EdgeInsets.symmetric(
-          vertical: isLandscape ? 12 : (isSmallScreen ? 12 : 16),
-          horizontal: 16,
-        ),
-      ),
-      keyboardType: keyboardType,
-      obscureText: obscureText,
-      validator: validator,
     );
   }
 }
