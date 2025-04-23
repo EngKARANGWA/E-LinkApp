@@ -3,14 +3,15 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 import '../services/payment_service.dart';
-import 'order_status_modal.dart';
 
 class PaymentModal extends StatefulWidget {
   final double totalAmount;
+  final Function(String) onPaymentComplete;
 
   const PaymentModal({
     super.key,
     required this.totalAmount,
+    required this.onPaymentComplete,
   });
 
   @override
@@ -149,12 +150,7 @@ class _PaymentModalState extends State<PaymentModal> {
       if (!mounted) return;
 
       Navigator.pop(context); // Close payment modal
-
-      // Show order status modal
-      showDialog(
-        context: context,
-        builder: (context) => OrderStatusModal(orderId: orderId),
-      );
+      widget.onPaymentComplete(orderId);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
