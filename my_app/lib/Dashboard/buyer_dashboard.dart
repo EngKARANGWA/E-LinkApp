@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/cart_service.dart';
 import '../services/notification_service.dart';
 import '../services/product_service.dart';
+import '../Modals/payment_modal.dart';
 import 'dart:convert';
 
 class BuyerDashboard extends StatefulWidget {
@@ -64,6 +65,12 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
     final cartItems = await CartService.getCart();
     if (!mounted) return;
 
+    // Calculate total amount
+    double totalAmount = 0;
+    for (var item in cartItems) {
+      totalAmount += (item['price'] ?? 0.0) * (item['quantity'] ?? 1);
+    }
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -120,9 +127,54 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
                     },
                   ),
                 ),
+              if (cartItems.isNotEmpty) ...[
+                const Divider(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Total Amount:',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '\$${totalAmount.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    showDialog(
+                      context: context,
+                      builder: (context) => PaymentModal(
+                        totalAmount: totalAmount,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    minimumSize: const Size(double.infinity, 48),
+                  ),
+                  child: const Text('Proceed to Payment'),
+                ),
+              ],
               const SizedBox(height: 16),
-              ElevatedButton(
+              OutlinedButton(
                 onPressed: () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                ),
                 child: const Text('Close'),
               ),
             ],
