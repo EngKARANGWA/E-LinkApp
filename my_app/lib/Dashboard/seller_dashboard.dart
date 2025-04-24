@@ -7,6 +7,8 @@ import 'dart:io';
 import '../services/product_service.dart';
 import '../services/notification_service.dart';
 import '../services/payment_service.dart';
+import '../services/user_service.dart';
+import '../Modals/edit_profile_modal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -27,7 +29,6 @@ class _SellerDashboardState extends State<SellerDashboard> {
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
   List<Map<String, dynamic>> _myProducts = [];
-  List<Map<String, dynamic>> _purchasedProducts = [];
 
   final List<String> _categories = [
     'Electronics',
@@ -232,8 +233,6 @@ class _SellerDashboardState extends State<SellerDashboard> {
     setState(() {
       _myProducts =
           products.where((product) => product['status'] == 'Active').toList();
-      _purchasedProducts =
-          products.where((product) => product['status'] == 'Sold').toList();
     });
   }
 
@@ -427,10 +426,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
     );
   }
 
-  Widget _buildProductCard(
-    Map<String, dynamic> product, {
-    bool isPurchased = false,
-  }) {
+  Widget _buildProductCard(Map<String, dynamic> product) {
     return Card(
       margin: const EdgeInsets.all(8.0),
       child: Column(
@@ -482,28 +478,27 @@ class _SellerDashboardState extends State<SellerDashboard> {
                   ),
                 ),
               ),
-              if (!isPurchased)
-                Positioned(
-                  bottom: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.visibility, size: 16),
-                        const SizedBox(width: 4),
-                        Text('${product['views'] ?? 0}'),
-                      ],
-                    ),
+              Positioned(
+                bottom: 8,
+                left: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.visibility, size: 16),
+                      const SizedBox(width: 4),
+                      Text('${product['views'] ?? 0}'),
+                    ],
                   ),
                 ),
+              ),
             ],
           ),
           Padding(
@@ -523,50 +518,49 @@ class _SellerDashboardState extends State<SellerDashboard> {
                         ),
                       ),
                     ),
-                    if (!isPurchased)
-                      PopupMenuButton<String>(
-                        onSelected: (value) async {
-                          switch (value) {
-                            case 'edit':
-                              _productNameController.text =
-                                  product['name']?.toString() ?? '';
-                              _priceController.text =
-                                  (product['price'] ?? 0.0).toString();
-                              _categoryController.text =
-                                  product['category']?.toString() ?? '';
-                              _descriptionController.text =
-                                  product['description']?.toString() ?? '';
-                              _addressController.text =
-                                  product['address']?.toString() ?? '';
-                              setState(() => _currentIndex = 2);
-                              break;
-                            case 'delete':
-                              await ProductService.deleteProduct(
-                                  product['id']?.toString() ?? '');
-                              await _loadProducts();
-                              break;
-                            case 'deactivate':
-                              product['status'] = 'Inactive';
-                              await ProductService.updateProduct(product);
-                              await _loadProducts();
-                              break;
-                          }
-                        },
-                        itemBuilder: (BuildContext context) => [
-                          const PopupMenuItem(
-                            value: 'edit',
-                            child: Text('Edit Product'),
-                          ),
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: Text('Delete Product'),
-                          ),
-                          const PopupMenuItem(
-                            value: 'deactivate',
-                            child: Text('Deactivate'),
-                          ),
-                        ],
-                      ),
+                    PopupMenuButton<String>(
+                      onSelected: (value) async {
+                        switch (value) {
+                          case 'edit':
+                            _productNameController.text =
+                                product['name']?.toString() ?? '';
+                            _priceController.text =
+                                (product['price'] ?? 0.0).toString();
+                            _categoryController.text =
+                                product['category']?.toString() ?? '';
+                            _descriptionController.text =
+                                product['description']?.toString() ?? '';
+                            _addressController.text =
+                                product['address']?.toString() ?? '';
+                            setState(() => _currentIndex = 2);
+                            break;
+                          case 'delete':
+                            await ProductService.deleteProduct(
+                                product['id']?.toString() ?? '');
+                            await _loadProducts();
+                            break;
+                          case 'deactivate':
+                            product['status'] = 'Inactive';
+                            await ProductService.updateProduct(product);
+                            await _loadProducts();
+                            break;
+                        }
+                      },
+                      itemBuilder: (BuildContext context) => [
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Text('Edit Product'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Delete Product'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'deactivate',
+                          child: Text('Deactivate'),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -580,83 +574,39 @@ class _SellerDashboardState extends State<SellerDashboard> {
                     ),
                   ],
                 ),
-                if (!isPurchased) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.shopping_cart, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${product['inCart'] ?? 0} in cart',
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.category, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        product['category']?.toString() ?? 'Uncategorized',
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.circle, size: 16, color: Colors.green),
-                      const SizedBox(width: 4),
-                      Text(
-                        product['status']?.toString() ?? 'Unknown',
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ],
-                if (isPurchased) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.person, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Sold to: ${product['buyer']?.toString() ?? 'Unknown'}',
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_today, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Purchased: ${product['purchaseDate']?.toString() ?? 'Unknown'}',
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  if (product['review'] != null) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.star, size: 16, color: Colors.amber),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${product['rating'] ?? 0}',
-                          style: const TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.shopping_cart, size: 16),
+                    const SizedBox(width: 4),
                     Text(
-                      product['review']?.toString() ?? '',
+                      '${product['inCart'] ?? 0} in cart',
                       style: const TextStyle(color: Colors.grey),
                     ),
                   ],
-                ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.category, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      product['category']?.toString() ?? 'Uncategorized',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.circle, size: 16, color: Colors.green),
+                    const SizedBox(width: 4),
+                    Text(
+                      product['status']?.toString() ?? 'Unknown',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -782,6 +732,159 @@ class _SellerDashboardState extends State<SellerDashboard> {
     );
   }
 
+  Widget _buildProfileTab() {
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: UserService.getCurrentUser(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData) {
+          return const Center(child: Text('No user data found'));
+        }
+
+        final user = snapshot.data!;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Center(
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.deepPurple,
+                  child: Icon(
+                    Icons.person,
+                    size: 50,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Business Information',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildInfoRow(
+                          Icons.person, 'Name', user['name'] ?? 'Not set'),
+                      const Divider(),
+                      _buildInfoRow(Icons.business, 'Business Name',
+                          user['businessName'] ?? 'Not set'),
+                      const Divider(),
+                      _buildInfoRow(
+                          Icons.email, 'Email', user['email'] ?? 'Not set'),
+                      const Divider(),
+                      _buildInfoRow(
+                          Icons.phone, 'Phone', user['phone'] ?? 'Not set'),
+                      const Divider(),
+                      _buildInfoRow(Icons.location_on, 'Business Address',
+                          user['businessAddress'] ?? 'Not set'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Account Information',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildInfoRow(
+                          Icons.account_circle, 'User Type', 'Seller'),
+                      const Divider(),
+                      _buildInfoRow(
+                        Icons.calendar_today,
+                        'Member Since',
+                        DateTime.parse(user['createdAt'] ??
+                                DateTime.now().toIso8601String())
+                            .toString()
+                            .split(' ')[0],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final result = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => EditProfileModal(user: user),
+                  );
+                  if (result == true) {
+                    setState(() {}); // Refresh profile data
+                  }
+                },
+                icon: const Icon(Icons.edit),
+                label: const Text('Edit Profile'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.deepPurple),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -820,20 +923,12 @@ class _SellerDashboardState extends State<SellerDashboard> {
               ),
             ],
           ),
-          // Purchased Products Tab
-          ListView.builder(
-            itemCount: _purchasedProducts.length,
-            itemBuilder: (context, index) {
-              return _buildProductCard(
-                _purchasedProducts[index],
-                isPurchased: true,
-              );
-            },
-          ),
           // Add Product Tab
           _buildAddProductForm(),
           // Payments Tab
           _buildPaymentsTab(),
+          // Profile Tab
+          _buildProfileTab(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -848,16 +943,16 @@ class _SellerDashboardState extends State<SellerDashboard> {
             label: 'My Products',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_bag),
-            label: 'Purchased',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.add_circle),
             label: 'Add Product',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.payment),
             label: 'Payments',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
         onTap: (index) {

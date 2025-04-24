@@ -8,6 +8,7 @@ import '../services/payment_service.dart';
 import '../services/user_service.dart';
 import '../Modals/payment_modal.dart';
 import '../Modals/order_status_modal.dart';
+import '../Modals/edit_profile_modal.dart';
 import 'dart:convert';
 
 class BuyerDashboard extends StatefulWidget {
@@ -686,13 +687,14 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
-                onPressed: () {
-                  // TODO: Implement edit profile functionality
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Edit profile functionality coming soon!'),
-                    ),
+                onPressed: () async {
+                  final result = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => EditProfileModal(user: user),
                   );
+                  if (result == true) {
+                    setState(() {}); // Refresh profile data
+                  }
                 },
                 icon: const Icon(Icons.edit),
                 label: const Text('Edit Profile'),

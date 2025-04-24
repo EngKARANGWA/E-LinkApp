@@ -94,4 +94,22 @@ class UserService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_currentUserKey) != null;
   }
+
+  static Future<void> updateUser(Map<String, dynamic> updates) async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentUserId = prefs.getString(_currentUserKey);
+    final usersJson = prefs.getString(_usersKey);
+
+    if (currentUserId == null || usersJson == null) return;
+
+    List<Map<String, dynamic>> users = (json.decode(usersJson) as List)
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+
+    final index = users.indexWhere((user) => user['id'] == currentUserId);
+    if (index != -1) {
+      users[index].addAll(updates);
+      await prefs.setString(_usersKey, json.encode(users));
+    }
+  }
 }
