@@ -19,6 +19,7 @@ class _SellerSignupState extends State<SellerSignup> {
   final _businessNameController = TextEditingController();
   final _businessAddressController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _locationController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -30,6 +31,7 @@ class _SellerSignupState extends State<SellerSignup> {
     _businessNameController.dispose();
     _businessAddressController.dispose();
     _phoneController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -49,6 +51,7 @@ class _SellerSignupState extends State<SellerSignup> {
             'businessName': _businessNameController.text,
             'businessAddress': _businessAddressController.text,
             'phone': _phoneController.text,
+            'location': _locationController.text,
           },
         );
 
@@ -170,6 +173,23 @@ class _SellerSignupState extends State<SellerSignup> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your business address';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _locationController,
+                decoration: const InputDecoration(
+                  labelText: 'Location for Product Posting',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.place),
+                  hintText:
+                      'Enter the location where you will be posting products from',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your product posting location';
                   }
                   return null;
                 },

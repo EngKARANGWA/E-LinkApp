@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/user_service.dart';
+import '../services/location_service.dart';
 import '../Dashboard/buyer_dashboard.dart';
 
 class BuyerSignup extends StatefulWidget {
@@ -17,6 +18,7 @@ class _BuyerSignupState extends State<BuyerSignup> {
   final _confirmPasswordController = TextEditingController();
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _locationController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -27,6 +29,7 @@ class _BuyerSignupState extends State<BuyerSignup> {
     _confirmPasswordController.dispose();
     _addressController.dispose();
     _phoneController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -37,6 +40,15 @@ class _BuyerSignupState extends State<BuyerSignup> {
       });
 
       try {
+        // Request location permission
+        final hasLocationPermission =
+            await LocationService.requestLocationPermission();
+        Map<String, dynamic>? locationData;
+
+        if (hasLocationPermission) {
+          locationData = await LocationService.getCurrentLocation();
+        }
+
         await UserService.registerUser(
           email: _emailController.text,
           password: _passwordController.text,
@@ -45,6 +57,8 @@ class _BuyerSignupState extends State<BuyerSignup> {
           additionalInfo: {
             'address': _addressController.text,
             'phone': _phoneController.text,
+            'location': _locationController.text,
+            if (locationData != null) ...locationData,
           },
         );
 
@@ -151,6 +165,23 @@ class _BuyerSignupState extends State<BuyerSignup> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your address';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _locationController,
+                decoration: const InputDecoration(
+                  labelText: 'Your Location',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.place),
+                  hintText:
+                      'Enter your current location for better product recommendations',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your location';
                   }
                   return null;
                 },

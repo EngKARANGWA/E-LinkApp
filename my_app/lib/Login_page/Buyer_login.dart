@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../services/user_service.dart';
+import '../services/location_service.dart';
 import '../Dashboard/buyer_dashboard.dart';
 import '../Signup_page/user_registration.dart';
 
@@ -38,26 +39,45 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen> {
           password: _passwordController.text,
         );
 
-        if (user != null && mounted) {
-          if (user['userType'] != 'buyer') {
-            throw Exception('Please login with a buyer account');
-          }
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const BuyerDashboard()),
-          );
-        } else {
+        if (!mounted) return;
+
+        if (user == null) {
           throw Exception('Invalid email or password');
         }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString()),
-              backgroundColor: Colors.red,
-            ),
-          );
+
+        if (user['userType'] != 'buyer') {
+          throw Exception('Please login with a buyer account');
         }
+
+        // Request location permission after successful login
+        final hasLocationPermission = await LocationService.requestLocationPermission();
+        if (!mounted) return;
+
+        if (hasLocationPermission) {
+          final locationData = await LocationService.getCurrentLocation();
+          if (!mounted) return;
+
+          if (locationData != null) {
+            // Update user's location in the database
+            await UserService.updateUser({
+              ...locationData,
+            });
+          }
+        }
+
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const BuyerDashboard()),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
       } finally {
         if (mounted) {
           setState(() {

@@ -9,6 +9,7 @@ import '../services/notification_service.dart';
 import '../services/payment_service.dart';
 import '../services/user_service.dart';
 import '../Modals/edit_profile_modal.dart';
+import '../Modals/location_picker_modal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -346,14 +347,44 @@ class _SellerDashboardState extends State<SellerDashboard> {
             maxLines: 3,
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _addressController,
-            decoration: const InputDecoration(
-              labelText: 'Product Location',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.location_on),
+          ElevatedButton.icon(
+            onPressed: () async {
+              final result = await showDialog<(String, double, double)>(
+                context: context,
+                builder: (context) => LocationPickerModal(
+                  onLocationSelected: (address, lat, lng) {
+                    Navigator.pop(context, (address, lat, lng));
+                  },
+                ),
+              );
+
+              if (result != null) {
+                setState(() {
+                  _addressController.text = result.$1;
+                });
+              }
+            },
+            icon: const Icon(Icons.location_on),
+            label: const Text('Select Location'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              minimumSize: const Size(double.infinity, 48),
             ),
           ),
+          if (_addressController.text.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _addressController.text,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: _getImage,
@@ -378,10 +409,12 @@ class _SellerDashboardState extends State<SellerDashboard> {
             onPressed: () async {
               if (_productNameController.text.isEmpty ||
                   _priceController.text.isEmpty ||
-                  _categoryController.text.isEmpty) {
+                  _categoryController.text.isEmpty ||
+                  _addressController.text.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                      content: Text('Please fill all required fields')),
+                    content: Text('Please fill all required fields'),
+                  ),
                 );
                 return;
               }
@@ -399,7 +432,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
               };
 
               await ProductService.saveProduct(product);
-              await _loadProducts(); // Reload products after saving
+              await _loadProducts();
 
               setState(() {
                 _productNameController.clear();

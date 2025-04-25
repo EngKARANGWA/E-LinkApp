@@ -1,7 +1,7 @@
 // ignore_for_file: library_private_types_in_public_api
 
 import 'package:flutter/material.dart';
-import 'package:my_app/signup_page/seller_signup.dart';
+import 'Signup_page/seller_signup.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -144,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Navigate to Seller Signup Page
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) =>const SellerSignupPage()),
+                  MaterialPageRoute(builder: (context) => const SellerSignup()),
                 );
               },
               child: const Text(
@@ -196,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Handle seller login
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) =>const SellerSignupPage()),
+                  MaterialPageRoute(builder: (context) => const SellerSignup()),
                 );
               },
               child: const Text(
@@ -217,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Navigate to Seller Signup Page
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) =>const SellerSignupPage()),
+                  MaterialPageRoute(builder: (context) => const SellerSignup()),
                 );
               },
               child: const Text(

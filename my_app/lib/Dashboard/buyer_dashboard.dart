@@ -6,6 +6,7 @@ import '../services/notification_service.dart';
 import '../services/product_service.dart';
 import '../services/payment_service.dart';
 import '../services/user_service.dart';
+import '../services/maps_service.dart';
 import '../Modals/payment_modal.dart';
 import '../Modals/order_status_modal.dart';
 import '../Modals/edit_profile_modal.dart';
@@ -387,15 +388,35 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  const Icon(Icons.location_on, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    product['address']?.toString() ?? 'No address',
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                ],
+              InkWell(
+                onTap: () {
+                  if (product['latitude'] != null &&
+                      product['longitude'] != null) {
+                    MapsService.openLocationInMaps(
+                      product['latitude'],
+                      product['longitude'],
+                      product['name']?.toString() ?? 'Product Location',
+                    );
+                  } else {
+                    MapsService.openAddressInMaps(
+                      product['address']?.toString() ?? '',
+                    );
+                  }
+                },
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_on,
+                        size: 16, color: Colors.deepPurple),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        product['address']?.toString() ?? 'No address',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    const Icon(Icons.map, size: 16, color: Colors.deepPurple),
+                  ],
+                ),
               ),
               const SizedBox(height: 8),
               Row(
